@@ -195,40 +195,42 @@ class Game:
         colour = piece.colour
         match type:
             case "pawn":
-                self.show_pawn_moves(piece, tile, colour)
+                self.possible_moves = self.show_pawn_moves(piece, tile, colour)
             case "rook":
-                self.show_rook_moves(piece, tile, colour)
+                self.possible_moves = self.show_rook_moves(piece, tile, colour)
             case "knight":
-                self.show_knight_moves(piece, tile, colour)
+                self.possible_moves = self.show_knight_moves(piece, tile, colour)
             case "bishop":
-                self.show_bishop_moves(piece, tile, colour)
+                self.possible_moves = self.show_bishop_moves(piece, tile, colour)
             case "queen":
-                self.show_rook_moves(piece, tile, colour)
-                self.show_bishop_moves(piece, tile, colour)
+                self.possible_moves = self.show_rook_moves(
+                    piece, tile, colour
+                ) + self.show_bishop_moves(piece, tile, colour)
             case "king":
-                self.show_king_moves(piece, tile, colour)
+                self.possible_moves = self.show_king_moves(piece, tile, colour)
                 # check for check
             case _:
                 print("FAIL")
 
     def show_pawn_moves(self, piece: Piece, tile: tuple[str, str], colour: str):
+        ret_list = []
         row, col = tile[0], tile[1]
         piece.is_enpassantable = False
         piece.can_enpassant = False
         if colour == "white":
             if not self.board[row - 1][col]:  # one space forward
-                self.possible_moves.append((row - 1, col))
+                ret_list.append((row - 1, col))
                 self.does_move_take.append(False)
                 if not piece.has_moved:
                     if row - 2 >= 0:  # check not out of bounds
                         if not self.board[row - 2][col]:  # two spaces forward
-                            self.possible_moves.append((row - 2, col))
+                            ret_list.append((row - 2, col))
                             self.does_move_take.append(False)
                             piece.is_enpassantable = True
             if col - 1 >= 0:  # taking piece diagonally left
                 if self.board[row - 1][col - 1] is not None:
                     if self.board[row - 1][col - 1].colour == "black":
-                        self.possible_moves.append((row - 1, col - 1))
+                        ret_list.append((row - 1, col - 1))
                         self.does_move_take.append(True)
                 else:  # en passant check
                     if self.board[row][col - 1] is not None:
@@ -237,14 +239,14 @@ class Game:
                             and self.board[row][col - 1].type == "pawn"
                         ):
                             if self.board[row][col - 1].is_enpassantable:
-                                self.possible_moves.append((row - 1, col - 1))
+                                ret_list.append((row - 1, col - 1))
                                 self.does_move_take.append(True)
                                 piece.can_enpassant = True
 
             if col + 1 < 8:  # taking piece diagonally right
                 if self.board[row - 1][col + 1] is not None:
                     if self.board[row - 1][col + 1].colour == "black":
-                        self.possible_moves.append((row - 1, col + 1))
+                        ret_list.append((row - 1, col + 1))
                         self.does_move_take.append(True)
                 else:  # en passant check
                     if self.board[row][col + 1] is not None:
@@ -253,24 +255,24 @@ class Game:
                             and self.board[row][col + 1].type == "pawn"
                         ):
                             if self.board[row][col + 1].is_enpassantable:
-                                self.possible_moves.append((row - 1, col + 1))
+                                ret_list.append((row - 1, col + 1))
                                 self.does_move_take.append(True)
                                 piece.can_enpassant = True
 
         else:  # piece is black
             if not self.board[row + 1][col]:  # one space forward
-                self.possible_moves.append((row + 1, col))
+                ret_list.append((row + 1, col))
                 self.does_move_take.append(False)
                 if not piece.has_moved:
                     if row + 2 < 8:  # check not out of bounds
                         if not self.board[row + 2][col]:  # two spaces forward
-                            self.possible_moves.append((row + 2, col))
+                            ret_list.append((row + 2, col))
                             self.does_move_take.append(False)
                             piece.is_enpassantable = True
             if col - 1 >= 0:  # taking piece diagonally left
                 if self.board[row + 1][col - 1] is not None:
                     if self.board[row + 1][col - 1].colour == "white":
-                        self.possible_moves.append((row + 1, col - 1))
+                        ret_list.append((row + 1, col - 1))
                         self.does_move_take.append(True)
                 else:  # en passant check
                     if self.board[row][col - 1] is not None:
@@ -279,14 +281,14 @@ class Game:
                             and self.board[row][col - 1].type == "pawn"
                         ):
                             if self.board[row][col - 1].is_enpassantable:
-                                self.possible_moves.append((row + 1, col - 1))
+                                ret_list.append((row + 1, col - 1))
                                 self.does_move_take.append(True)
                                 piece.can_enpassant = True
 
             if col + 1 < 8:  # taking piece diagonally right
                 if self.board[row + 1][col + 1] is not None:
                     if self.board[row + 1][col + 1].colour == "white":
-                        self.possible_moves.append((row + 1, col + 1))
+                        ret_list.append((row + 1, col + 1))
                         self.does_move_take.append(True)
                 else:  # en passant check
                     if self.board[row][col + 1] is not None:
@@ -295,269 +297,299 @@ class Game:
                             and self.board[row][col + 1].type == "pawn"
                         ):
                             if self.board[row][col + 1].is_enpassantable:
-                                self.possible_moves.append((row + 1, col + 1))
+                                ret_list.append((row + 1, col + 1))
                                 self.does_move_take.append(True)
                                 piece.can_enpassant = True
 
+        return ret_list
+
     def show_rook_moves(self, piece: Piece, tile: tuple[str, str], colour: str):
+        ret_list = []
         row, col = tile[0], tile[1]
         for to_row in range(row + 1, 8):
             if self.board[to_row][col] is not None:
                 if self.board[to_row][col].colour != colour:
-                    self.possible_moves.append((to_row, col))
+                    ret_list.append((to_row, col))
                     self.does_move_take.append(True)
                 break
             else:
-                self.possible_moves.append((to_row, col))
+                ret_list.append((to_row, col))
                 self.does_move_take.append(False)
 
         for to_row in range(row - 1, -1, -1):
             if self.board[to_row][col] is not None:
                 if self.board[to_row][col].colour != colour:
-                    self.possible_moves.append((to_row, col))
+                    ret_list.append((to_row, col))
                     self.does_move_take.append(True)
                 break
             else:
-                self.possible_moves.append((to_row, col))
+                ret_list.append((to_row, col))
                 self.does_move_take.append(False)
 
         for to_col in range(col + 1, 8):
             if self.board[row][to_col] is not None:
                 if self.board[row][to_col].colour != colour:
-                    self.possible_moves.append((row, to_col))
+                    ret_list.append((row, to_col))
                     self.does_move_take.append(True)
                 break
             else:
-                self.possible_moves.append((row, to_col))
+                ret_list.append((row, to_col))
                 self.does_move_take.append(False)
 
         for to_col in range(col - 1, -1, -1):
             if self.board[row][to_col] is not None:
                 if self.board[row][to_col].colour != colour:
-                    self.possible_moves.append((row, to_col))
+                    ret_list.append((row, to_col))
                     self.does_move_take.append(True)
                 break
             else:
-                self.possible_moves.append((row, to_col))
+                ret_list.append((row, to_col))
                 self.does_move_take.append(False)
 
+        return ret_list
+
     def show_knight_moves(self, piece: Piece, tile: tuple[str, str], colour: str):
+        ret_list = []
         row, col = tile[0], tile[1]
         if col - 1 >= 0:
             if row - 2 >= 0:  # up left
                 if self.board[row - 2][col - 1] is not None:
                     if self.board[row - 2][col - 1].colour != colour:
-                        self.possible_moves.append((row - 2, col - 1))
+                        ret_list.append((row - 2, col - 1))
                         self.does_move_take.append(True)
                 else:
-                    self.possible_moves.append((row - 2, col - 1))
+                    ret_list.append((row - 2, col - 1))
                     self.does_move_take.append(False)
             if row + 2 < 8:  # down left
                 if self.board[row + 2][col - 1] is not None:
                     if self.board[row + 2][col - 1].colour != colour:
-                        self.possible_moves.append((row + 2, col - 1))
+                        ret_list.append((row + 2, col - 1))
                         self.does_move_take.append(True)
                 else:
-                    self.possible_moves.append((row + 2, col - 1))
+                    ret_list.append((row + 2, col - 1))
                     self.does_move_take.append(False)
 
             if col - 2 >= 0:
                 if row - 1 >= 0:  # left up
                     if self.board[row - 1][col - 2] is not None:
                         if self.board[row - 1][col - 2].colour != colour:
-                            self.possible_moves.append((row - 1, col - 2))
+                            ret_list.append((row - 1, col - 2))
                             self.does_move_take.append(True)
                     else:
-                        self.possible_moves.append((row - 1, col - 2))
+                        ret_list.append((row - 1, col - 2))
                         self.does_move_take.append(False)
                 if row + 1 < 8:  # left down
                     if self.board[row + 1][col - 2] is not None:
                         if self.board[row + 1][col - 2].colour != colour:
-                            self.possible_moves.append((row + 1, col - 2))
+                            ret_list.append((row + 1, col - 2))
                             self.does_move_take.append(True)
                     else:
-                        self.possible_moves.append((row + 1, col - 2))
+                        ret_list.append((row + 1, col - 2))
                         self.does_move_take.append(False)
 
         if col + 1 < 8:
             if row - 2 >= 0:  # up right
                 if self.board[row - 2][col + 1] is not None:
                     if self.board[row - 2][col + 1].colour != colour:
-                        self.possible_moves.append((row - 2, col + 1))
+                        ret_list.append((row - 2, col + 1))
                         self.does_move_take.append(True)
                 else:
-                    self.possible_moves.append((row - 2, col + 1))
+                    ret_list.append((row - 2, col + 1))
                     self.does_move_take.append(False)
             if row + 2 < 8:  # down right
                 if self.board[row + 2][col + 1] is not None:
                     if self.board[row + 2][col + 1].colour != colour:
-                        self.possible_moves.append((row + 2, col + 1))
+                        ret_list.append((row + 2, col + 1))
                         self.does_move_take.append(True)
                 else:
-                    self.possible_moves.append((row + 2, col + 1))
+                    ret_list.append((row + 2, col + 1))
                     self.does_move_take.append(False)
 
             if col + 2 < 8:
                 if row - 1 >= 0:  # right up
                     if self.board[row - 1][col + 2] is not None:
                         if self.board[row - 1][col + 2].colour != colour:
-                            self.possible_moves.append((row - 1, col + 2))
+                            ret_list.append((row - 1, col + 2))
                             self.does_move_take.append(True)
                     else:
-                        self.possible_moves.append((row - 1, col + 2))
+                        ret_list.append((row - 1, col + 2))
                         self.does_move_take.append(False)
                 if row + 1 < 8:  # right down
                     if self.board[row + 1][col + 2] is not None:
                         if self.board[row + 1][col + 2].colour != colour:
-                            self.possible_moves.append((row + 1, col + 2))
+                            ret_list.append((row + 1, col + 2))
                             self.does_move_take.append(True)
                     else:
-                        self.possible_moves.append((row + 1, col + 2))
+                        ret_list.append((row + 1, col + 2))
                         self.does_move_take.append(False)
 
+        return ret_list
+
     def show_bishop_moves(self, piece: Piece, tile: tuple[str, str], colour: str):
+        ret_list = []
         row, col = tile[0], tile[1]
-        for i in range(1, min(row, col) + 1):  # up left
-            if self.board[row - i][col - i] is not None:
-                if self.board[row - i][col - i].colour != colour:
-                    self.possible_moves.append((row - i, col - i))
-                    self.does_move_take.append(True)
-                break
-            else:
-                self.possible_moves.append((row - i, col - i))
-                self.does_move_take.append(False)
+        if row > 0 and col > 0:
+            for i in range(1, min(row, col) + 1):  # up left
+                if self.board[row - i][col - i] is not None:
+                    if self.board[row - i][col - i].colour != colour:
+                        ret_list.append((row - i, col - i))
+                        self.does_move_take.append(True)
+                    break
+                else:
+                    ret_list.append((row - i, col - i))
+                    self.does_move_take.append(False)
 
-        for i in range(1, min(row, 8 - col) + 1):  # up right
-            if self.board[row - i][col + i] is not None:
-                if self.board[row - i][col + i].colour != colour:
-                    self.possible_moves.append((row - i, col + i))
-                    self.does_move_take.append(True)
-                break
-            else:
-                self.possible_moves.append((row - i, col + i))
-                self.does_move_take.append(False)
+        if row > 0 and col < 7:
+            for i in range(1, min(row, 7 - col) + 1):  # up right
+                if self.board[row - i][col + i] is not None:
+                    if self.board[row - i][col + i].colour != colour:
+                        ret_list.append((row - i, col + i))
+                        self.does_move_take.append(True)
+                    break
+                else:
+                    ret_list.append((row - i, col + i))
+                    self.does_move_take.append(False)
 
-        for i in range(1, min(8 - row, col) + 1):  # down left
-            if self.board[row + i][col - i] is not None:
-                if self.board[row + i][col - i].colour != colour:
-                    self.possible_moves.append((row + i, col - i))
-                    self.does_move_take.append(True)
-                break
-            else:
-                self.possible_moves.append((row + i, col - i))
-                self.does_move_take.append(False)
+        if row < 7 and col > 0:
+            for i in range(1, min(7 - row, col) + 1):  # down left
+                if self.board[row + i][col - i] is not None:
+                    if self.board[row + i][col - i].colour != colour:
+                        ret_list.append((row + i, col - i))
+                        self.does_move_take.append(True)
+                    break
+                else:
+                    ret_list.append((row + i, col - i))
+                    self.does_move_take.append(False)
 
-        for i in range(1, min(8 - row, 8 - col) + 1):  # down right
-            if self.board[row + i][col + i] is not None:
-                if self.board[row + i][col + i].colour != colour:
-                    self.possible_moves.append((row + i, col + i))
-                    self.does_move_take.append(True)
-                break
-            else:
-                self.possible_moves.append((row + i, col + i))
-                self.does_move_take.append(False)
+        if row < 7 and col < 7:
+            for i in range(1, min(7 - row, 7 - col) + 1):  # down right
+                if self.board[row + i][col + i] is not None:
+                    if self.board[row + i][col + i].colour != colour:
+                        ret_list.append((row + i, col + i))
+                        self.does_move_take.append(True)
+                    break
+                else:
+                    ret_list.append((row + i, col + i))
+                    self.does_move_take.append(False)
+
+        return ret_list
 
     def show_king_moves(self, piece: Piece, tile: tuple[str, str], colour: str):
+        ret_list = []
         row, col = tile[0], tile[1]
         if col - 1 >= 0:  # left
             if self.board[row][col - 1] is not None:
                 if self.board[row][col - 1].colour != colour:
-                    self.possible_moves.append((row, col - 1))
+                    ret_list.append((row, col - 1))
                     self.does_move_take.append(True)
             else:
-                self.possible_moves.append((row, col - 1))
+                ret_list.append((row, col - 1))
                 self.does_move_take.append(False)
             if row - 1 >= 0:  # up left
                 if self.board[row - 1][col - 1] is not None:
                     if self.board[row - 1][col - 1].colour != colour:
-                        self.possible_moves.append((row - 1, col - 1))
+                        ret_list.append((row - 1, col - 1))
                         self.does_move_take.append(True)
                 else:
-                    self.possible_moves.append((row - 1, col - 1))
+                    ret_list.append((row - 1, col - 1))
                     self.does_move_take.append(False)
             if row + 1 < 8:  # down left
                 if self.board[row + 1][col - 1] is not None:
                     if self.board[row + 1][col - 1].colour != colour:
-                        self.possible_moves.append((row + 1, col - 1))
+                        ret_list.append((row + 1, col - 1))
                         self.does_move_take.append(True)
                 else:
-                    self.possible_moves.append((row + 1, col - 1))
+                    ret_list.append((row + 1, col - 1))
                     self.does_move_take.append(False)
 
         if col + 1 < 8:  # right
             if self.board[row][col + 1] is not None:
                 if self.board[row][col + 1].colour != colour:
-                    self.possible_moves.append((row, col + 1))
+                    ret_list.append((row, col + 1))
                     self.does_move_take.append(True)
             else:
-                self.possible_moves.append((row, col + 1))
+                ret_list.append((row, col + 1))
                 self.does_move_take.append(False)
             if row - 1 >= 0:  # up right
                 if self.board[row - 1][col + 1] is not None:
                     if self.board[row - 1][col + 1].colour != colour:
-                        self.possible_moves.append((row - 1, col + 1))
+                        ret_list.append((row - 1, col + 1))
                         self.does_move_take.append(True)
                 else:
-                    self.possible_moves.append((row - 1, col + 1))
+                    ret_list.append((row - 1, col + 1))
                     self.does_move_take.append(False)
             if row + 1 < 8:  # down right
                 if self.board[row + 1][col + 1] is not None:
                     if self.board[row + 1][col + 1].colour != colour:
-                        self.possible_moves.append((row + 1, col + 1))
+                        ret_list.append((row + 1, col + 1))
                         self.does_move_take.append(True)
                 else:
-                    self.possible_moves.append((row + 1, col + 1))
+                    ret_list.append((row + 1, col + 1))
                     self.does_move_take.append(False)
 
         if row - 1 >= 0:  # up
             if self.board[row - 1][col] is not None:
                 if self.board[row - 1][col].colour != colour:
-                    self.possible_moves.append((row - 1, col))
+                    ret_list.append((row - 1, col))
                     self.does_move_take.append(True)
             else:
-                self.possible_moves.append((row - 1, col))
+                ret_list.append((row - 1, col))
                 self.does_move_take.append(False)
         if row + 1 < 8:  # down
             if self.board[row + 1][col] is not None:
                 if self.board[row + 1][col].colour != colour:
-                    self.possible_moves.append((row + 1, col))
+                    ret_list.append((row + 1, col))
                     self.does_move_take.append(True)
             else:
-                self.possible_moves.append((row + 1, col))
+                ret_list.append((row + 1, col))
                 self.does_move_take.append(False)
-                
-        if not piece.has_moved:
-            self.can_castle(colour)
 
-    def can_castle(self, colour:str):
+        if not piece.has_moved:
+            for pos in self.can_castle(colour):
+                ret_list.append(pos)
+
+        return ret_list
+
+    def can_castle(self, colour: str):
+        ret_list = []
         if colour == "white":
-            if self.board[7][1] is None and self.board[7][2] is None and self.board[7][3] is None: # castle left
+            if (
+                self.board[7][1] is None
+                and self.board[7][2] is None
+                and self.board[7][3] is None
+            ):  # castle left
                 if self.board[7][0] is not None:
                     if self.board[7][0].type == "rook":
                         if not self.board[7][0].has_moved:
-                            self.possible_moves.append((7, 2))
+                            ret_list.append((7, 2))
                             self.does_move_take.append(False)
 
-            if self.board[7][6] is None and self.board[7][5] is None: # castle right
+            if self.board[7][6] is None and self.board[7][5] is None:  # castle right
                 if self.board[7][7] is not None:
                     if self.board[7][7].type == "rook":
                         if not self.board[7][7].has_moved:
-                            self.possible_moves.append((7, 6))
+                            ret_list.append((7, 6))
                             self.does_move_take.append(False)
-        else: # black
-            if self.board[0][1] is None and self.board[0][2] is None and self.board[0][3] is None: # castle left
+        else:  # black
+            if (
+                self.board[0][1] is None
+                and self.board[0][2] is None
+                and self.board[0][3] is None
+            ):  # castle left
                 if self.board[0][0] is not None:
                     if self.board[0][0].type == "rook":
                         if not self.board[0][0].has_moved:
-                            self.possible_moves.append((0, 2))
+                            ret_list.append((0, 2))
                             self.does_move_take.append(False)
 
-            if self.board[0][6] is None and self.board[0][5] is None: # castle right
+            if self.board[0][6] is None and self.board[0][5] is None:  # castle right
                 if self.board[0][7] is not None:
                     if self.board[0][7].type == "rook":
                         if not self.board[0][7].has_moved:
-                            self.possible_moves.append((0, 6))
+                            ret_list.append((0, 6))
                             self.does_move_take.append(False)
+
+        return ret_list
 
     def move_piece(self, from_tile, to_tile):
         piece = self.board[from_tile[0]][from_tile[1]]
@@ -569,7 +601,7 @@ class Game:
                         self.board[to_tile[0] + 1][to_tile[1]] = None
                     else:
                         self.board[to_tile[0] - 1][to_tile[1]] = None
-            
+
             # check for promotion
             if piece.colour == "white":
                 if to_tile[0] == 0:
